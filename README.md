@@ -28,9 +28,32 @@ This talk brings my experiences coming from a predominantly C/C++ background and
 
 - Note: Why Wrap is cool(Preserves context of an error)
 
+
+
+## Installation
+
+1. Clone this repo in your `$GOPATH`
+```
+$ git clone https://github.com/Ch3ck/5-mistakes-c-cpp-devs-make-writing-go
+```
+
+2. Install the Go present tool
+ ```
+ go get -u -v golang.org/x/tools/cmd/present
+ ```
+
+3. Run the present tool
+ ```
+ cd 5-mistakes-c-cpp-devs-make-writing-go && present
+ ```
+$ git clone https://github.com/Ch3ck/5-mistakes-c-cpp-devs-make-writing-go
+The slides will be available at [http://127.0.0.1:3999/5-mistakes-c-cpp-devs-make-writing-goslide](http://127.0.0.1:3999/5-mistakes-c-cpp-devs-make-writing-go.slide#1)
+
+
+
 ## Issues
 
-- New ideas are always welcomed, so you can submit an [issue](https://github.com/Ch3ck/MistakesC-CPP-Devs-MakeInGo/issues) with a question comment or make a [pull request](https://github.com/Ch3ck/MistakesC-CPP-Devs-MakeInGo/pulls) if you see something better that can be done. I'll cultimate all these ideas on to a blog post on [medium](https://medium.com/@checko) and you should find the slides on my [SlideDeck](https://speakerdeck.com/ch3ck)
+- New ideas are always welcomed, so you can submit an [issue](https://github.com/Ch3ck/5-mistakes-c-cpp-devs-make-writing-go/issues) with a question comment or make a [pull request](https://github.com/Ch3ck/5-mistakes-c-cpp-devs-make-writing-go/pulls) if you see something better that can be done. I'll cultimate all these ideas on to a blog post on [medium](https://medium.com/@checko) and you should find the slides on my [SlideDeck](https://speakerdeck.com/ch3ck)
 
 ## Author
 - Ping me on Twitter [@nyah_check](https://twitter.com/nyah_check)
