@@ -1,0 +1,58 @@
+5 Mistakes C/C++ Devs make writing Go
+A newbie's journey into Go
+
+Aug 29 2018
+
+Nyah Check
+Software Engineer, Altitude Networks
+nyah@altitudenetworks.com
+https://github.com/Ch3ck
+@nyah_check
+
+
+
+* Why Am I here?
+
+- Wrote C/C++ for close to 5 years before Go.
+
+- Brought bad C style code in Go and had a lot of issues
+
+
+* What you'll learn...
+
+- Learn from my mistakes
+
+- Avoid some common pitfalls newbies face writing Go
+
+
+
+* Agenda
+
+This tutorial session is aimed at  both newbie and experienced Go developers and some of the pitfalls newbies commonly fall into writing Go.
+
+- Introduction
+- [[01-profiling/profiling.slide][Performance measurement and profiling]]
+- [[02-benchmarking/benchmarking.slide][Benchmarking]]
+- [[03-compiler-optimisations/compiler-optimisations.slide][Compiler optimisations]]
+- [[04-execution-tracer/understanding-the-execution-tracer.slide][Understanding the execution tracer]]
+- [[][]]
+- Conclusion & Q/A
+
+After each section we'll have time for questions.
+
+* One more thing ...
+
+This isn't a lecture, it's a conversation.
+
+We'll have lots of breaks to ask questions.
+
+If you don't understand something, or think what you're hearing is incorrect, please ask.
+
+* Introduction
+
+* Next
+
+[[01-profiling/profiling.slide][Performance measurement and profiling]]
+
+
+
