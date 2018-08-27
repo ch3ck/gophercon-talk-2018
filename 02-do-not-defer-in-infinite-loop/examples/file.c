@@ -3,12 +3,19 @@
 #include <stdlib.h>
 
 
-int main (char *argv, int argc) {
+int main(int argc, char *argv[]) {
     FILE *fp;
-    for (int i = 1; i < argc; i++) {
-        fp = fopen(argv[i], "r+");
-        ...
-        fclose(fp);
+    for ( ; ; ) {
+        for (int i = 1; i < argc; i++) {
+            fp = fopen("argv[i]", "r+");
+            if (fp == NULL) {
+                    fprintf(stderr, "Invalid file %s", argv[i]);
+                exit(EXIT_FAILURE);
+            }
+            printf("Open successful");
+            fclose(fp);
+        }
     }
+    
     return 0;
 }
