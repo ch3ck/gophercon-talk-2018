@@ -1,0 +1,44 @@
+5 Mistakes C/C++ Devs make writing Go
+A newbie's journey into Go
+
+Aug 29 2018
+
+Nyah Check
+Software Engineer, Altitude Networks
+nyah@altitudenetworks.com
+https://github.com/Ch3ck
+@nyah_check
+
+
+
+* Discussion
+
+Any questions?
+
+* Conclusion
+
+
+_Understand_ Escape analysis. Look at the compiler decisions, do not make _reasonable_guesses_.
+
+
+_Defer_ executes only when the function returns. Using it in a infinite loop is a _code_smell_.
+
+
+_Three_Index_slices_ adds a _memory_safety_ utility in Go, use it.
+
+* Conclusion (cont.)
+
+_Profile_ your Go code to identify bottlenecks early on, it's a good practice.
+
+_Errors in Go are not just strings, but _much_more.
+
+_Wrap errors to preserve context and handle them gracefully.
+
+
+* There are many more errors C/C++ devs make
+
+_Remember_, Go is not C/C++
+
+
+"Programming in Go is like being young again (but more productive!)."
+.caption
