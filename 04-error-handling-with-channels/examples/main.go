@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"runtime"
 	"time"
 
 	"github.com/pkg/profile"
@@ -18,7 +19,7 @@ func doSomethingTwice() error {
 	errc := make(chan error, 1)
 	//errc := make(chan error, 2)
 	go func() {
-		defer fmt.Println("done with a")
+		defer fmt.Println("done wth a")
 		errc <- doSomething("a")
 	}()
 	go func() {
@@ -30,10 +31,12 @@ func doSomethingTwice() error {
 }
 
 func main() {
-	defer profile.Start().Stop()
+	defer profile.Start(profile.TraceProfile).Stop()
+
 	rand.Seed(time.Now().Unix())
 	for range time.Tick(100 * time.Millisecond) {
 		fmt.Println(doSomethingTwice())
 	}
 
+	fmt.Printf("Num of Goroutines: %d", runtime.NumGoroutine())
 }
