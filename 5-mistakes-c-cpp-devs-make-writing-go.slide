@@ -414,8 +414,39 @@ However there are some best practices you can follow to avoid some of these erro
 
 
 * Error handling
+
 * Mistake 5: Errors are not just strings, but much more
 
+Consider a *C* program with a division by zero error
+.code examples/error_in_c.c
+
+* Handling errors in C
+
+- Typically consists of writing error message to stderr and returning an exit code.
+
+However, in Go errors are much more complicated than strings.
+
+Consider this example:
+.code examples/main.go /START OMIT/,/END OMIT/
+
+* Wrapping Errors in Go(Errors package)
+Consider another example
+
+.code examples/errors.go /START OMIT/,/END OMIT/
+
+* Advantages of Wrap and Cause funcs
+
+- You can preserve the error context and pass to the calling program
+- Using the `errors.Cause()` function call we can determine what caused this error later in the program
+
+I believe it’s a feature some developers my overlook but if used properly will give a better Go development experience.
+
+
+* Lesson learned:
+- The errors package provides a lot of powerful tools for handling errors which some devs may ignore.
+- Wrap() and errors.Cause() are very useful in preserving context of an error later in the program.
+
+Take a look at the errors package and see elegant examples.
 
 
 * Discussion
