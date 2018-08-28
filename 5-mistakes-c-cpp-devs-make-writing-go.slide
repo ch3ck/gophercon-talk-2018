@@ -214,9 +214,10 @@ This will be sure to open and close up the files once the operations are done.
 
 * Mistake 3: Keeping pointers in an accessible(although not visible) part of a slice
 
-Prior to Go 1.2 there was a memory safety issue with slices, where you could literally access regions in memory you're not legally permitted to:
+- Prior to Go 1.2 there was a memory safety issue with slices, where you could literally access regions in memory you're not legally permitted to:
 - This would create problems where you'll unitentionally rewrite regions of memory and will increase your pain.
 
+* Let's use an example.
 Consider the slice:
 
 	a := []*int{new(int), new(int)}
@@ -228,7 +229,7 @@ Consider the slice:
 	fmt.Println(a)
 
 
-* What's our output
+Our output will be:
 
     ➜  examples git:(master) ✗ go run main.go
     [0xc420016090 0xc420016098]
@@ -236,22 +237,22 @@ Consider the slice:
     [0xc420016090 0xc420016098]
 
 
-*What are some of the problems?*
+* What are some of the problems?
 
 - This can cause problems later on where you can write data to parts of the slice you shouldn’t have access to
 - Memory will be garbage collected as wrongly assumed.
 - If you can access certain parts of memory you don’t legally have access to, it may be a source for exploits
 
-* How do you solve this then? Go 1.2++
+* How do you solve this then?
 
-Go 1.2++ added *3 Index Slice  operation*
+Go 1.2++ added 3-Index-Slice  operation
 
 - This enables you to specify the cap during slicing.
 
 - The restricted slice capacity provides a level of protection to the underlying array and gives us more control over append operations
 
 
-*How do we use it then:*
+* How do we use it then
 
 Rewriting our code gives
 
@@ -275,7 +276,7 @@ Rewriting our code gives
         /Users/nyahcheck/go/src/github.com/Ch3ck/5-mistakes-c-cpp-devs-make-writing-go/03-pointer-in-non-visible-slice-portion/examples/main.go:27 +0x1ae
     exit status 2
 
-Our slice cap was set to 1 which prevents us from accessing regions of memory we don't have permissions to, rightly creating a panic.
+Our slice cap was set to 1, we can't access regions of memoery we don't have permissions to, rightly creating a panic.
 
 * Lesson
 
