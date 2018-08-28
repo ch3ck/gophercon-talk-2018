@@ -198,7 +198,7 @@ This will be sure to open and close up the files once the operations are done.
 
 * Solution
 
-.code examples/main.go /START FIX/,/END FIX/
+.code 02-do-not-defer-in-infinite-loop/examples/main.go /START FIX/,/END FIX/
 
 * Lessons learned
 
@@ -213,4 +213,4 @@ This will be sure to open and close up the files once the operations are done.
 
 * Mistake 3: Keeping pointers in an accessible(although not visible) part of a slice
 
-[[02-do-not-defer-in-infinite-loop/do-not-defer-in-infinite-loop.slide][Do not defer in an infinite loop]]
+
