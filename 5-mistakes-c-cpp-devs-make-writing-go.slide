@@ -44,5 +44,113 @@ If you don't understand something, or think what I'm saying is incorrect, please
 
 * Escape Analysis
 
-* Mistake 1
-[[01-new-doesnt-mean-heap/new-doesnt-mean-heap.slide][New doesn't mean heap and var does not mean stack]]
+**  Mistake 1: New doesn't mean heap && var doesn't mean stack
+
+An early mistake was to minimize _escape_analysis_ and it's possible implications my program's performances
+
+
+
+Consider the following _C++_ code
+.code 01-new-doesnt-mean-heap/examples/heap.cpp /START OMIT/,/END OMIT/
+
+* Wrong assumptions..
+
+- In C++, we know *new* allocates to the value stored at *a* on the heap.
+
+- In Go, we don't really know for sure. 
+- May be the *new* keyword was stolen from C++ as a result might likely be allocated on the heap?
+
+- Given my C++ bias, I thought minimizing it's use will reduce _heap_ allocation.
+
+
+* Let's look at some code...
+
+.code 01-new-doesnt-mean-heap/examples/heap.go /START OMIT/,/END OMIT/
+
+* Question
+
+Where do we think the *vv* variable will be allocated? *stack* or *heap*?
+
+* Let's look at the compiler escape decisions output
+
+    $ go run -gcflags -m main.go
+    # command-line-arguments
+    ./main.go:6:6: can inline newIntStack
+    ./main.go:12:39: inlining call to newIntStack
+    ./main.go:7:11: new(int) escapes to heap
+    ./main.go:12:27: *(*int)(~r0) escapes to heap
+    ./main.go:12:39: main new(int) does not escape         <--- Surprise!!!
+    ./main.go:12:26: main ... argument does not escape
+    0
+
+* Let's take a look at another example
+
+    package main
+
+    import "fmt"
+
+    func main() {
+        x := "GOPHERCON-2018"
+        fmt.Println(x)
+    }
+
+* Where will x be allocated?
+
+Stack or Heap?
+
+* Let's find out...
+
+    ➜  examples git:(master) ✗ go run -gcflags -m main.go
+    # command-line-arguments
+    ./main.go:15:13: x escapes to heap
+    ./main.go:15:13: main ... argument does not escape
+    GOPHERCON-2018
+    ➜  examples git:(master) ✗
+
+
+It's surprising to see *x* which not called outside may is allocated on the heap instead.
+
+* Why?
+
+I’ll pass the -m option multiple times to make the output more verbose:
+
+    ➜  examples git:(master) ✗ go run -gcflags '-m -m'  main.go
+    # command-line-arguments
+    ./main.go:13:6: cannot inline main: non-leaf function
+    ./main.go:15:13: x escapes to heap
+    ./main.go:15:13:        from ... argument (arg to ...) at ./main.go:15:13
+    ./main.go:15:13:        from *(... argument) (indirection) at ./main.go:15:13
+    ./main.go:15:13:        from ... argument (passed to call[argument content escapes]) at ./main.go:15:13  <-- THIS IS IT!
+    ./main.go:15:13: main ... argument does not escape
+    GOPHERCON-2018
+    ➜  examples git:(master) ✗
+
+So looking at L15:13
+
+- x is passed to a function argument which `escapes`
+- So x is heap allocated instead.
+
+This is very confusing to a C/C++ developer, yet this is how Go works.
+
+* Lessons
+
+- Escape analysis is very important in writing more performant Go programs, yet there's no language specification on this.
+- Some of the compiler's escape analysis decisions are counterintuitive, yet trial and error is the only way to know
+- Do not make assumptions, rather do static analysis on the code and make informed decisions.
+
+
+* Escape Analysis guidelines
+
+- Functions calling other functions
+- references assigned to struct members
+- slices and maps
+- pointers to variables
+
+* Conclusion
+"If a reference to a variable is returned from a function where it’s declared, it ‘escapes’ and is heap allocated instead"
+.caption
+
+* Memory Leaks
+
+** Mistake 2: Do not defer in an infinite Loop
+[[02-do-not-defer-in-infinite-loop/do-not-defer-in-infinite-loop.slide][Do not defer in an infinite loop]]
