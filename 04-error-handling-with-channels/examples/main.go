@@ -2,11 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
-	"net/http"
-	_ "net/http/pprof"
 	"time"
+
+	"github.com/pkg/profile"
 )
 
 func doSomething(name string) error {
@@ -15,7 +14,7 @@ func doSomething(name string) error {
 }
 
 func doSomethingTwice() error {
-	// without the 2 this will leak a goroutine
+	// without the 2  goroutines this will leak a goroutine
 	errc := make(chan error, 1)
 	//errc := make(chan error, 2)
 	go func() {
@@ -31,10 +30,10 @@ func doSomethingTwice() error {
 }
 
 func main() {
+	defer profile.Start().Stop()
 	rand.Seed(time.Now().Unix())
 	for range time.Tick(100 * time.Millisecond) {
 		fmt.Println(doSomethingTwice())
 	}
 
-	log.Println(http.ListenAndServe("localhost:6060", nil))
 }
