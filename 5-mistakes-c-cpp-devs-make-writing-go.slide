@@ -102,7 +102,7 @@ Stack or Heap?
 
     ➜  examples git:(master) ✗ go run -gcflags -m main.go
     # command-line-arguments
-    ./main.go:15:13: x escapes to heap
+    ./main.go:15:13: x escapes to heap        <---- STRANGE THINGS!
     ./main.go:15:13: main ... argument does not escape
     GOPHERCON-2018
     ➜  examples git:(master) ✗
@@ -120,17 +120,21 @@ I’ll pass the -m option multiple times to make the output more verbose:
     ./main.go:15:13: x escapes to heap
     ./main.go:15:13:        from ... argument (arg to ...) at ./main.go:15:13
     ./main.go:15:13:        from *(... argument) (indirection) at ./main.go:15:13
-    ./main.go:15:13:        from ... argument (passed to call[argument content escapes]) at ./main.go:15:13  <-- THIS IS IT!
+    ./main.go:15:13:        from ... argument (passed to call[argument content escapes]) at ./main.go:15:13
+    ...                                          // <-- X is called by a funtion above which escapes! -->
     ./main.go:15:13: main ... argument does not escape
     GOPHERCON-2018
     ➜  examples git:(master) ✗
+
+* What happened?
 
 So looking at L15:13
 
 - x is passed to a function argument which `escapes`
 - So x is heap allocated instead.
 
-This is very confusing to a C/C++ developer, yet this is how Go works.
+This is very confusing/counterintuitive to a C/C++ developer, yet this is how Go works.
+
 
 * Lessons
 

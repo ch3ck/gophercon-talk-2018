@@ -1,0 +1,8 @@
+* Mistake 3: Pointer in non visible(but accessible) slice portion
+
+
+
+* Goroutine leaks
+
+* Mistake 4
+[[../04-error-handling-with-channels/error-handling-with-channels.slide][Avoiding  goroutine leaks]]

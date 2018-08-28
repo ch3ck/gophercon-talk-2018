@@ -1,0 +1,14 @@
+* Do not defer in an infinite loop
+
+
+
+
+
+
+
+
+
+
+
+* Next
+[[../03-pointer-in-non-visible-slice-portion/pointer-in-non-visible-slice-portion.slide][Memory safety with three-index slice]] 
