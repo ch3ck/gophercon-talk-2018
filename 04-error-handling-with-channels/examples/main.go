@@ -3,10 +3,9 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	"runtime"
 	"time"
 
-	"github.com/pkg/profile"
+	"github.com/pkg/profile" //PROFILE PACKAGE HELPS WITH PROFILING CODE
 )
 
 func doSomething(name string) error {
@@ -16,8 +15,8 @@ func doSomething(name string) error {
 
 func doSomethingTwice() error {
 	// without the 2  goroutines this will leak a goroutine
-	errc := make(chan error, 1)
-	//errc := make(chan error, 2)
+	//errc := make(chan error, 1) // ISSUE OCCURS HERE
+	errc := make(chan error, 2) // FIX TO ISSUE
 	go func() {
 		defer fmt.Println("done wth a")
 		errc <- doSomething("a")
@@ -31,12 +30,11 @@ func doSomethingTwice() error {
 }
 
 func main() {
-	defer profile.Start(profile.TraceProfile).Stop()
+	defer profile.Start(profile.TraceProfile).Stop() //ADD TRACING TOOL
 
 	rand.Seed(time.Now().Unix())
 	for range time.Tick(100 * time.Millisecond) {
 		fmt.Println(doSomethingTwice())
 	}
 
-	fmt.Printf("Num of Goroutines: %d", runtime.NumGoroutine())
 }

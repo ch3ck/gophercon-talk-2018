@@ -10,8 +10,36 @@ https://github.com/Ch3ck
 @nyah_check
 
 
+* Mistake 4: Error handling with channels where # channels < # goroutines
 
+- C/C++ has libraries for multi-threaded programming,
+- Concurrency in Goconcurrency in Go materializes itself in the form of goroutines and channels.
+- How do you avoid goroutine leakages
+ One of the issues programmers will deal with is how to void their leakages.
 
+Causes:
+
+- Infinite loops
+- Blocked I/O channels
+
+When these occur more cpu/memory resources are used than actually needed. Leading to frequent program crashes
+
+* Let's consider the following example
+
+- We'll look at the issue
+- Fix it and discuss go tools available to handle these kinds of issues
+
+.code examples/main.go
+
+I have a sample program where I’m batch processing files with two goroutines. In a case where one go routine is done it writes to a channel and exits
+While the other goroutine continues and if done writes to the same channel and exits.
+
+Let’s look at this case:
+
+Problems:
+- More go routines than channels are present to write to this function
+- When one routine writes to the channel, the program exits and the other goroutine is lost 
+- 
 
 
 
