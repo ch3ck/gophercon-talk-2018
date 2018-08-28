@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/profile" //PROFILE PACKAGE HELPS WITH PROFILING CODE
 )
 
+//START OMIT
 func doSomething(name string) error {
 	time.Sleep(time.Duration(rand.Intn(10)) * time.Millisecond)
 	return fmt.Errorf("something went wrong with " + name)
@@ -29,6 +30,7 @@ func doSomethingTwice() error {
 	return err
 }
 
+//END OMIT
 func main() {
 	defer profile.Start(profile.TraceProfile).Stop() //ADD TRACING TOOL
 
