@@ -1,5 +1,72 @@
 * Mistake 3: Pointer in non visible(but accessible) slice portion
 
+Prior to Go 1.2 there was a memory safety issue with slices, where you could literally access regions in memory you're not legally permitted to
+
+Consider the slice:
+
+	a := []*int{new(int), new(int)}
+	a = a[:1]
+	fmt.Println(a) // [&0]
+
+	// second element is not garbage collected, because it's *still* accessible
+	a = a[:2] //[&0] // <-- Illegal memory access
+	fmt.Println(a)
+
+
+* What's our output
+
+    ➜  examples git:(master) ✗ go run main.go
+    [0xc420016090 0xc420016098]
+    [0xc420016090]
+    [0xc420016090 0xc420016098]
+
+
+*What are some of the problems?*
+
+- This can cause problems later on where you can write data to parts of the slice you shouldn’t have access to
+- Memory will be garbage collected as wrongly assumed.
+- If you can access certain parts of memory you don’t legally have access to, it may be a source for exploits
+
+* How do you solve this then? Go 1.2++
+
+Go 1.2++ added *3 Index Slice  operation*
+
+- This enables you to specify the cap during slicing.
+
+- The restricted slice capacity provides a level of protection to the underlying array and gives us more control over append operations
+
+
+*How do we use it then:*
+
+Rewriting our code gives
+
+    a := []*int{new(int), new(int)}
+    a = a[:1:1] // THREE INDEX SLICE OPERATION
+    fmt.Println(a) // [&0]
+
+    // second element is garbage collected, and can no longer be accessible
+    a = a[:2]
+    fmt.Println(a)
+
+* Our output becomes ...
+
+    ➜  examples git:(master) ✗ go run main.go
+    [0xc420016090 0xc420016098]
+    [0xc420016090]
+    panic: runtime error: slice bounds out of range
+
+    goroutine 1 [running]:
+    main.main()
+        /Users/nyahcheck/go/src/github.com/Ch3ck/5-mistakes-c-cpp-devs-make-writing-go/03-pointer-in-non-visible-slice-portion/examples/main.go:27 +0x1ae
+    exit status 2
+
+Our slice cap was set to 1 which prevents us from accessing regions of memory we don't have permissions to, rightly creating a panic.
+
+* Lesson
+
+Three index slicing creates a memory safety feature for your Go programs which pervents certain parts of memory to accesses/modified intentionally or otherwise.
+
+
 
 
 * Goroutine leaks
