@@ -11,7 +11,7 @@ https://github.com/Ch3ck
 
 
 
-* Why Am I here?
+* Why am I here?
 
 - Wrote C/C++ for close to 5 years before Go.
 
@@ -28,15 +28,24 @@ https://github.com/Ch3ck
 
 * Agenda
 
-This tutorial session is aimed at  both newbie and experienced Go developers and some of the pitfalls newbies commonly fall into writing Go.
+I classified the 5 mistakes under 4 topics:
+
+- Escape Analysis
+- Memory leaks
+- Goroutine leaks
+- Error handling
+
+I'll be open to questions at the end of the presentation
+
+
 
 - Introduction
-- [[01-profiling/profiling.slide][Performance measurement and profiling]]
-- [[02-benchmarking/benchmarking.slide][Benchmarking]]
-- [[03-compiler-optimisations/compiler-optimisations.slide][Compiler optimisations]]
-- [[04-execution-tracer/understanding-the-execution-tracer.slide][Understanding the execution tracer]]
-- [[][]]
-- Conclusion & Q/A
+- [[01-new-doesnt-mean-heap/new-doesnt-mean-heap.slide][Understanding escape analysis in Go]]
+- [[02-do-not-defer-in-infinite-loop/do-not-defer-in-infinite-loop.slide][Do not defer in an infinite loop]]
+- [[03-pointer-in-non-visible-slice-portion/pointer-in-non-visible-slice-portion.slide][Memory safety with three-index slice]]
+- [[04-error-handling-with-channels/error-hanlding-with-channels.slide][Avoiding goroutine leaks]]
+- [[05-errors-are-not-strings/errors-are-not-strings.slide][Errors are much more than strings]]
+- [[05-errors/are-not/strings/conclusion.slide][Conclusion & Q/A]]
 
 After each section we'll have time for questions.
 
@@ -46,13 +55,15 @@ This isn't a lecture, it's a conversation.
 
 We'll have lots of breaks to ask questions.
 
-If you don't understand something, or think what you're hearing is incorrect, please ask.
+NOTE: If you don't understand something, or think what you're hearing is incorrect, please ask.
 
 * Introduction
 
+Understanding Escape Analysis
+
 * Next
 
-[[01-profiling/profiling.slide][Performance measurement and profiling]]
+[[01-new-doesnt-mean-heap/new-doesn't-mean-heap.slide][Understanding Escape Analysis]]
 
 
 
