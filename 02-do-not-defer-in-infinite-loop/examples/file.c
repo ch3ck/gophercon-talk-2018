@@ -4,6 +4,7 @@
 
 
 int main(int argc, char *argv[]) {
+    //START OMIT
     FILE *fp;
     for ( ; ; ) {
         for (int i = 1; i < argc; i++) {
@@ -12,10 +13,11 @@ int main(int argc, char *argv[]) {
                     fprintf(stderr, "Invalid file %s", argv[i]);
                 exit(EXIT_FAILURE);
             }
-            printf("Open successful");
+            ... //FILE OPERATION PROCEDURE
             fclose(fp);
         }
     }
+    //END OMIT
     
     return 0;
 }

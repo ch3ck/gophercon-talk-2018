@@ -44,10 +44,9 @@ If you don't understand something, or think what I'm saying is incorrect, please
 
 * Escape Analysis
 
-**  Mistake 1: New doesn't mean heap && var doesn't mean stack
+* Mistake 1: New doesn't mean heap && var doesn't mean stack
 
 An early mistake was to minimize _escape_analysis_ and it's possible implications my program's performances
-
 
 
 Consider the following _C++_ code
@@ -156,5 +155,62 @@ This is very confusing/counterintuitive to a C/C++ developer, yet this is how Go
 
 * Memory Leaks
 
-** Mistake 2: Do not defer in an infinite Loop
+* Mistake 2: Do not defer in an infinite Loop
+
+The *defer* statement is used to clean up resources after you open up a resource(e.g. file, connection etc)
+
+So an idiomatic way will be:
+
+    fp, err := os.Open("path/to/file.text")
+    if err != nil {
+        //handle error gracefully
+    }
+    defer fp.Close()
+
+This snippet is guaranteed to work even if cases where there’s a panic and it’s *standard* Go practice. 
+
+* So what's the problem?
+
+In very large files where resources cannot be tracked and freed properly, this becomes a problem.
+
+Consider a file monitoring program in *C* where:
+- check a database for changes to files
+- perform some operation(logging, send requests etc)
+
+* Something like this might work
+.code 02-do-not-defer-in-infinite-loop/examples/file.c /START OMIT/,/END OMIT/
+This will be sure to open and close up the files once the operations are done.
+
+* However in Go
+.code 02-do-not-defer-in-infinite-loop/examples/main.go /START OMIT/,/END OMIT/
+
+*Problems:*
+- Deferred code never executes since the function has not returned
+- So memory clean up never happens and it’s use keeps piling up
+- Files will never be closed, therefore causing loss of data due to lack of flush.
+
+
+* How do I fix this?
+
+- Spin up a goroutine for each file monitoring
+- This ensures everything is bound to the context
+- Hence files are opened and closed
+
+* Solution
+
+.code examples/main.go /START FIX/,/END FIX/
+
+* Lessons learned
+
+- Since defer is tied to the new function context, we are sure it's executed and memory is flushed when files close
+- When defer executes we are certain our goroutine finished execution
+- Defer doesn not execute until the function returns, so no memory leaks result
+
+* Conclusion
+
+"A *defer* statement invokes a function whose execution is deferred to the moment the surrounding function returns"
+.caption
+
+* Mistake 3: Keeping pointers in an accessible(although not visible) part of a slice
+
 [[02-do-not-defer-in-infinite-loop/do-not-defer-in-infinite-loop.slide][Do not defer in an infinite loop]]

@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+//START OMIT
 func loggingMonitorErr(files []string) {
 	for range time.Tick(time.Minute) {
 		for range files {
@@ -16,6 +17,7 @@ func loggingMonitorErr(files []string) {
 	}
 }
 
+//END OMIT
 func main() {
 	fp, err := os.Open("path/to/file.text")
 	if err != nil {
@@ -24,6 +26,7 @@ func main() {
 	defer fp.Close()
 }
 
+//START FIX
 func loggingMonitorFix(files []string) {
 	for range time.Tick(time.Minute) {
 		for range files {
@@ -36,3 +39,5 @@ func loggingMonitorFix(files []string) {
 		}
 	}
 }
+
+//END FIX

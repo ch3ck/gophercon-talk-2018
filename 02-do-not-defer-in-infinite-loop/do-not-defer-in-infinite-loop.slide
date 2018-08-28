@@ -1,14 +1,70 @@
+5 Mistakes C/C++ Devs make writing Go
+A newbie's journey into Go
+
+Aug 29 2018
+
+Nyah Check
+Software Engineer, Altitude Networks
+nyah@altitudenetworks.com
+https://github.com/Ch3ck
+@nyah_check
+
+
 * Do not defer in an infinite loop
 
+The *defer* statement is used to clean up resources after you open up a resource(e.g. file, connection etc)
+
+So an idiomatic way will be:
+
+    fp, err := os.Open("path/to/file.text")
+    if err != nil {
+        //handle error gracefully
+    }
+    defer fp.Close()
+
+This snippet is guaranteed to work even if cases where there’s a panic and it’s *standard* Go practice. 
+
+* So what's the problem?
+
+In very large files where resources cannot be tracked and freed properly, this becomes a problem.
+
+Consider a file monitoring program in *C* where:
+- check a database for changes to files
+- perform some operation(logging, send requests etc)
+
+* Something like this might work
+.code examples/file.c /START OMIT/,/END OMIT/
+This will be sure to open and close up the files once the operations are done.
+
+* However in Go
+.code examples/main.go /START OMIT/,/END OMIT/
+
+*Problems:*
+- Deferred code never executes since the function has not returned
+- So memory clean up never happens and it’s use keeps piling up
+- Files will never be closed, therefore causing loss of data due to lack of flush.
 
 
+* How do I fix this?
 
+- Spin up a goroutine for each file monitoring
+- This ensures everything is bound to the context
+- Hence files are opened and closed
 
+* Solution
 
+.code examples/main.go /START FIX/,/END FIX/
 
+* Lessons learned
 
+- Since defer is tied to the new function context, we are sure it's executed and memory is flushed when files close
+- When defer executes we are certain our goroutine finished execution
+- Defer doesn not execute until the function returns, so no memory leaks result
 
+* Conclusion
 
+"A *defer* statement invokes a function whose execution is deferred to the moment the surrounding function returns"
+.caption
 
 * Next
 [[../03-pointer-in-non-visible-slice-portion/pointer-in-non-visible-slice-portion.slide][Memory safety with three-index slice]] 
