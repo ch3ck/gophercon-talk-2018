@@ -6,6 +6,7 @@ import (
 	"net"
 )
 
+//START OMIT
 func main() {
 	conn, err := net.Dial("tcp", "goooooooooooogle.com:80")
 	if err != nil {
@@ -20,3 +21,5 @@ func main() {
 	}
 	defer conn.Close()
 }
+
+//END OMIT

@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+//START OMIT
 func connect(addr string) error {
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
@@ -24,6 +25,8 @@ func connect(addr string) error {
 
 	return nil
 }
+
+//END OMIT
 
 func main() {
 	if err := connect("goooooooooooogle.com:80"); err != nil {

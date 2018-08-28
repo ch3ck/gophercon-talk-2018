@@ -31,27 +31,120 @@ When these occur more cpu/memory resources are used than actually needed. Leadin
 
 .code examples/main.go
 
-I have a sample program where I’m batch processing files with two goroutines. In a case where one go routine is done it writes to a channel and exits
-While the other goroutine continues and if done writes to the same channel and exits.
+* What does our code do?
 
-Let’s look at this case:
+This program spins up two goroutines and runs some internal processes and writes the results to a channel
 
-Problems:
+Our output here is:
+    ➜  examples git:(master) ✗ go run main.go
+    2018/08/28 14:09:54 profile: trace enabled, /var/folders/s7/s4fj1d3j07b5wqy3jw_lpwj00000gn/T/profile307450157/trace.out
+    done wth a
+    something went wrong with a
+    done with b
+    done wth a
+    something went wrong with a
+    done with b
+    done with b
+    something went wrong with b
+    done wth a
+    done with b
+    something went wrong with b
+    done wth a
+    done wth a
+    something went wrong with a
+    done with b
+    done wth a
+    something went wrong with a
+    done with b
+    done with b
+    something went wrong with b
+    done wth a
+    done wth a
+    something went wrong with a
+    done with b
+    done with b
+    ...
+
+Let's look at the memory build up
+
+    Processes: 481 total, 2 running, 479 sleeping, 3067 threads                                                                                                                    14:22:36
+    Load Avg: 2.10, 2.16, 2.20  CPU usage: 2.95% user, 2.36% sys, 94.67% idle  SharedLibs: 157M resident, 40M data, 5464K linkedit.
+    MemRegions: 179430 total, 5220M resident, 119M private, 2881M shared. PhysMem: 16G used (3359M wired), 150M unused.
+    VM: 7554G vsize, 1111M framework vsize, 3678046(0) swapins, 4327421(0) swapouts. Networks: packets: 14686827/9918M in, 4519629/711M out. Disks: 2386524/45G read, 2410064/54G written.
+
+    PID    COMMAND      %CPU      TIME     #TH    #WQ   #PORT MEM    PURG   CMPRS  PGRP  PPID  STATE    BOOSTS           %CPU_ME %CPU_OTHRS UID  FAULTS    COW     MSGSENT    MSGRECV
+    39491  main         0.6       00:00.30 10     0     32    1404K+ 0B     0B     39477 39477 sleeping *0[1]            0.00000 0.00000    501  667+      11      22         11
+    39477  go           0.0       00:00.22 16     0     57    9212K  0B     0B     39477 8036  sleeping *0[1]            0.00000 0.00000    501  6854      1531    55         27
+    39465  quicklookd   0.0       00:00.14 4      1     85    5060K  32K    0B     39465 1     sleeping  0[0]            0.00000 0.00000    501  4657      258     288        79
+
+
+* What are the problems with the code
 - More go routines than channels are present to write to this function
-- When one routine writes to the channel, the program exits and the other goroutine is lost 
-- 
+- When one routine writes to the channel, the program exits and the other goroutine is lost, building up memory use as a results
+- that region of memory is not garbage collected
 
+* How do we fix this?
 
+We simply increase the number of channels to 2,
+This makes it possible for the two goroutines to pass their results to the calling program.
+    ...
+    func doSomethingTwice() error {
+        // without the 2  goroutines this will leak a goroutine
+        //errc := make(chan error, 1) // ISSUE OCCURS HERE
+        errc := make(chan error, 2) // FIX TO ISSUE
+        go func() {
+            defer fmt.Println("done wth a")
+            errc <- doSomething("a")
+        }()
+        go func() {
+            defer fmt.Println("done with b")
+            errc <- doSomething("b")
+        }()
+        err := <-errc
+        return err
+    }
+    ...
 
+Our output here becomes
 
+    ➜  examples git:(master) ✗ go run main.go
+    2018/08/28 14:29:10 profile: trace enabled, /var/folders/s7/s4fj1d3j07b5wqy3jw_lpwj00000gn/T/profile870826243/trace.out
+    done with b
+    something went wrong with b
+    done wth a
+    done wth a
+    something went wrong with a
+    done with b
+    done wth a
+    something went wrong with a
+    done with b
+    done wth a
+    something went wrong with a
+    done with b
+    done wth a
 
+Our memory build up is:
 
+    Processes: 480 total, 2 running, 478 sleeping, 3066 threads                                                                                                                    14:31:45
+    Load Avg: 1.79, 2.17, 2.19  CPU usage: 2.70% user, 3.41% sys, 93.87% idle  SharedLibs: 159M resident, 40M data, 5556K linkedit.
+    MemRegions: 211071 total, 5727M resident, 103M private, 2878M shared. PhysMem: 16G used (3397M wired), 403M unused.
+    VM: 7551G vsize, 1112M framework vsize, 3678685(0) swapins, 4327421(0) swapouts. Networks: packets: 14689235/9919M in, 4522309/711M out. Disks: 2395186/45G read, 2417927/54G written.
 
+    PID    COMMAND      %CPU TIME     #TH   #WQ  #PORT MEM    PURG   CMPRS  PGRP  PPID  STATE    BOOSTS          %CPU_ME %CPU_OTHRS UID  FAULTS    COW     MSGSENT    MSGRECV    SYSBSD
+    39844  top          4.8  00:02.74 1/1   0    23    5880K  0B     0B     39844 15534 running  *0[1]           0.00000 0.00000    0    18318+    110     928405+    464178+    66200+
+    39835  main         0.6  00:00.30 11    0    35    1396K+ 0B     0B     39821 39821 sleeping *0[1]           0.00000 0.00000    501  667+      11      24         12         5386+
+    39821  go           0.0  00:00.18 15    0    54    9272K  0B     0B     39821 8036  sleeping *0[1]           0.00000 0.00000    501  7075      1500    53         26         12111
+    39813  quicklookd   0.0  00:00.08 4     1    85    5020K  32K    0B     39813 1     sleeping  0[0]           0.00000 0.00000    501  4617      258     288        79         2292
 
+*Lessons
 
+Goroutine leaks are very common in Go development especially for those without a concurrency programming background. 
+However there are some best practices you can follow to avoid some of these errors:
 
-
-
+- Using the context package to terminate or timeout goroutines which may otherwise run indefinitely
+- Using a done signal or timeout channel can help in terminating a running goroutine preventing leaks
+- Profiling the code, Stack trace instrumentation and adding benchmarks can go a long way in finding these leaks
+- There are some third party libraries for instrumentation which can be applied:  opencensus, go-torch, goes, leaktest, etc
 
 
 * Next
