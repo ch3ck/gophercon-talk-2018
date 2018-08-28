@@ -16,8 +16,8 @@ func doSomething(name string) error {
 
 func doSomethingTwice() error {
 	// without the 2  goroutines this will leak a goroutine
-	//errc := make(chan error, 1) // ISSUE OCCURS HERE
-	errc := make(chan error, 2) // FIX TO ISSUE
+	errc := make(chan error, 1) // ISSUE OCCURS HERE
+	//errc := make(chan error, 2) // FIX TO ISSUE
 	go func() {
 		defer fmt.Println("done wth a")
 		errc <- doSomething("a")

@@ -346,7 +346,7 @@ Our output here is:
 
 
 * What are the problems with the code
-- More go routines than channels are present to write to this function
+- More goroutines than channels are present to write to send data back to main
 - When one routine writes to the channel, the program exits and the other goroutine is lost, building up memory use as a results
 - that region of memory is not garbage collected
 
@@ -412,9 +412,6 @@ However there are some best practices you can follow to avoid some of these erro
 - Profiling the code, Stack trace instrumentation and adding benchmarks can go a long way in finding these leaks
 - There are some third party libraries for instrumentation which can be applied:  opencensus, go-torch, goes, leaktest, etc
 
-
-
-[[../04-error-handling-with-channels/error-handling-with-channels.slide][Avoiding  goroutine leaks]]
 
 * Error handling
 * Mistake 5: Errors are not just strings, but much more
