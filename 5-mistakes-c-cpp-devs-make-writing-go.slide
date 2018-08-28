@@ -418,7 +418,7 @@ However there are some best practices you can follow to avoid some of these erro
 * Mistake 5: Errors are not just strings, but much more
 
 Consider a *C* program with a division by zero error
-.code examples/error_in_c.c
+.code 05-errors-are-not-strings/examples/error_in_c.c
 
 * Handling errors in C
 
@@ -427,12 +427,12 @@ Consider a *C* program with a division by zero error
 However, in Go errors are much more complicated than strings.
 
 Consider this example:
-.code examples/main.go /START OMIT/,/END OMIT/
+.code 05-errors-are-not-strings/examples/main.go /START OMIT/,/END OMIT/
 
 * Wrapping Errors in Go(Errors package)
 Consider another example
 
-.code examples/errors.go /START OMIT/,/END OMIT/
+.code 05-errors-are-not-strings/examples/errors.go /START OMIT/,/END OMIT/
 
 * Advantages of Wrap and Cause funcs
 
