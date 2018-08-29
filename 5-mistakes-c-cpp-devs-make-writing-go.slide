@@ -275,30 +275,31 @@ Prior to Go 1.2 there was a memory safety issue with slices
 
 * What are some of the problems?
 
-- This can cause problems later on where you can write data to parts of the slice you shouldn’t have access to
-- Memory will be garbage collected as wrongly assumed.
-- If you can access certain parts of memory you don’t legally have access to, it may be a source for exploits
+
+- Write regions of memory unintentionally.
+
+- Robustness issues: Memory is not garbage collected since there's a *reference* to it.
+
+- It's a source for potential bugs
 
 * How do you solve this then?
 
-Go 1.2++ added 3-Index-Slice  operation
+Go 1.2++ added the *3-Index-Slice*  operation
 
-- This enables you to specify the cap during slicing.
+- This enables you to specify the capacity during slicing.
 
-- The restricted slice capacity provides a level of protection to the underlying array and gives us more control over append operations
+- The restricted slice capacity provides a level of protection to the underlying array
 
+- No unintended memory writes.
+
+- Unused areas of the underlying array are garbage collected.
 
 * How do we use it then
 
 Rewriting our code gives
+.play 03-pointer-in-non-visible-slice-portion/examples/fixedSlice.go /START OMIT/,/END OMIT/ 
 
-    a := []*int{new(int), new(int)}
-    a = a[:1:1] // THREE INDEX SLICE OPERATION
-    fmt.Println(a) // [&0]
 
-    // second element is garbage collected, and can no longer be accessible
-    a = a[:2]
-    fmt.Println(a)
 
 * Our output becomes ...
 
@@ -316,35 +317,53 @@ Our slice cap was set to 1, we can't access regions of memory we don't have perm
 
 * Lesson
 
-Three index slicing creates a memory safety feature for your Go programs which pervents certain parts of memory to accesses/modified intentionally or otherwise.
+- Our slice capacity was set to 1, so can't access restricted regions in memory, rightly creating a panic
 
+- More robust programs since unused memory is garbae collected.
+
+- Reduce sources for potential bugs in your code.
 
 
 * Goroutine leaks
 
+* What's a Goroutine
+
+It's a *lightweight* thread of execution, it consists of functions that run *concurrently* with other functions/methods.
+
+What about channels?
+
+A *channel* is a pipe that connects concurrent goroutines.
+
+An understanding of these two concepts embodies concurrency in Go.
+
+
+* How do they leak?
+
+There are different possible causes for goroutine leaks, some include:
+
+- Infinite loops
+
+- Blocks on synchronization points(channels, mutexes), deadlocks
+
+However when these occur the program takes up more memory than it actually needs leading to *high*latency* and frequent crashes.
+
+Let's take a look at an example
+
 * Mistake 4: Error handling with channels where # channels < # goroutines
 
 
-- C/C++ has libraries for multi-threaded programming,
-- Concurrency in Goconcurrency in Go materializes itself in the form of goroutines and channels.
-- How do you avoid goroutine leakages
- 
- One of the issues programmers will deal with is how to void their leakages.
+- C/C++ has libraries for multi-threaded programming.
 
-Causes:
+- Concurrency in Go materializes itself in the form of goroutines and channels.
 
-- Infinite loops
-- Blocked I/O channels
-
-When these occur more cpu/memory resources are used than actually needed. Leading to frequent program crashes
-
-* Let's consider the following example
+*Problem:*
 
 - We'll look at the issue
+
 - Fix it and discuss go tools available to handle these kinds of issues
 
 * main.go
-.code 04-error-handling-with-channels/examples/main.go /START OMIT/,/END OMIT/
+.play 04-error-handling-with-channels/examples/main.go /START OMIT/,/END OMIT/
 
 * What does our code do?
 
@@ -391,39 +410,30 @@ Our output here is:
 We simply increase the number of channels to 2,
 This makes it possible for the two goroutines to pass their results to the calling program.
 
-    func doSomethingTwice() error {
-        // without the 2  goroutines this will leak a goroutine
-        //errc := make(chan error, 1) // ISSUE OCCURS HERE
-        errc := make(chan error, 2) // FIX TO ISSUE
-        go func() {
-            defer fmt.Println("done wth a")
-            errc <- doSomething("a")
-        }()
-        go func() {
-            defer fmt.Println("done with b")
-            errc <- doSomething("b")
-        }()
-        err := <-errc
-        return err
-    }
+.play 04-error-handling-with-channels/examples/fixed.go /START OMIT/,/END OMIT/
 
 * Our output here becomes
 
-    ➜  examples git:(master) ✗ go run main.go
-    2018/08/28 14:29:10 profile: trace enabled, /var/folders/s7/s4fj1d3j07b5wqy3jw_lpwj00000gn/T/profile870826243/trace.out
+    ➜  examples git:(master) ✗ go run fixed.go
+    2018/08/29 00:40:45 profile: trace enabled, /var/folders/s7/s4fj1d3j07b5wqy3jw_lpwj00000gn/T/profile855307187/trace.out
+    ------
+    done wth a
+    something went wrong with a
+    done with b
+    ------
+    done wth a
+    something went wrong with a
+    done with b
+    ------
     done with b
     something went wrong with b
     done wth a
+    ------
     done wth a
     something went wrong with a
     done with b
-    done wth a
-    something went wrong with a
-    done with b
-    done wth a
-    something went wrong with a
-    done with b
-    done wth a
+    ------
+
 
 * Our memory build up is:
 
@@ -438,23 +448,37 @@ This makes it possible for the two goroutines to pass their results to the calli
     39821  go           0.0  00:00.18 15    0    54    9272K  0B     0B     39821 8036  sleeping *0[1]           0.00000 0.00000    501  7075      1500    53         26         12111
     39813  quicklookd   0.0  00:00.08 4     1    85    5020K  32K    0B     39813 1     sleeping  0[0]           0.00000 0.00000    501  4617      258     288        79         2292
 
+* Performing Traces on the code
+
+
 * Lessons
 
-Goroutine leaks are very common in Go development especially for those without a concurrency programming background. 
+Goroutine leaks are very common in Go development.
+
 However there are some best practices you can follow to avoid some of these errors:
 
 - Using the context package to terminate or timeout goroutines which may otherwise run indefinitely
+
 - Using a done signal or timeout channel can help in terminating a running goroutine preventing leaks
+
+* Best practices (cont.)
+
+
 - Profiling the code, Stack trace instrumentation and adding benchmarks can go a long way in finding these leaks
-- There are some third party libraries for instrumentation which can be applied:  opencensus, go-torch, goes, leaktest, etc
+
+- Take advantage of the go tooling ecosystem: go tool trace, go tool profile , go-torch, gops, leaktest etc
 
 
 * Error handling
 
+* What are errors in Go?
+
+
+
 * Mistake 5: Errors are not just strings, but much more
 
 Consider a *C* program with a division by zero error
-.code 05-errors-are-not-strings/examples/error_in_c.c
+.play 05-errors-are-not-strings/examples/error_in_c.c
 
 * Handling errors in C
 
@@ -463,12 +487,12 @@ Consider a *C* program with a division by zero error
 However, in Go errors are much more complicated than strings.
 
 Consider this example:
-.code 05-errors-are-not-strings/examples/main.go /START OMIT/,/END OMIT/
+.play 05-errors-are-not-strings/examples/main.go /START OMIT/,/END OMIT/
 
 * Wrapping Errors in Go(Errors package)
 Consider another example
 
-.code 05-errors-are-not-strings/examples/errors.go /START OMIT/,/END OMIT/
+.play 05-errors-are-not-strings/examples/errors.go /START OMIT/,/END OMIT/
 
 * Advantages of Wrap and Cause funcs
 
