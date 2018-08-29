@@ -78,81 +78,73 @@ Consider the following _C++_ code
 
 .play 01-new-doesnt-mean-heap/examples/stack.go
 
-* Question
-
-Where do we think the *vv* variable will be allocated? 
-
-*Stack* or *Heap*?
-
-* Let's look at the compiler escape decisions output
-
-    ➜  examples git:(master) ✗ go run -gcflags -m stack.go
-    # command-line-arguments
-    ./stack.go:7:6: can inline newIntStack
-    ./stack.go:14:39: inlining call to newIntStack
-    ./stack.go:9:11: new(int) escapes to hea
-    ./stack.go:14:27: *(*int)(~r0) escapes to heap
-    ./stack.go:14:39: main new(int) does not escape <-- STACK ALLOCATED
-    ./stack.go:14:26: main ... argument does not escape
-    0
-    ➜  examples git:(master) 
-
+# * Question
+# 
+# Where do we think the *vv* variable will be allocated? 
+# 
+# *Stack* or *Heap*?
+# 
+# * Let's look at the compiler escape decisions output
+# 
+#     ➜  examples git:(master) ✗ go run -gcflags -m stack.go
+#     # command-line-arguments
+#     ./stack.go:7:6: can inline newIntStack
+#     ./stack.go:14:39: inlining call to newIntStack
+#     ./stack.go:9:11: new(int) escapes to hea
+#     ./stack.go:14:27: *(*int)(~r0) escapes to heap
+#     ./stack.go:14:39: main new(int) does not escape <-- STACK ALLOCATED
+#     ./stack.go:14:26: main ... argument does not escape
+#     0
+#     ➜  examples git:(master) 
+# 
 * Let's take a look at another example
 .play 01-new-doesnt-mean-heap/examples/heap.go
 
-* Where will x be allocated?
-
-*Heap* or *Stack*?
-
-* Let's find out...
-
-    ➜  examples git:(master) ✗ go run -gcflags -m heap.go
-    # command-line-arguments
-    ./heap.go:9:13: x escapes to heap <---- Something strange happens
-    ./heap.go:9:13: main ... argument does not escape
-    GOPHERCON-2018
-
-It's surprising to see *x* which not called outside may is allocated on the heap instead.
-
-* Why?
-
-I’ll pass the -m option multiple times to make the output more verbose:
-
-    # command-line-arguments
-    ./heap.go:7:6: cannot inline main: non-leaf function
-    ./heap.go:9:13: x escapes to heap
-    ./heap.go:9:13:         from ... argument (arg to ...) at ./heap.go:9:13
-    ./heap.go:9:13:         from *(... argument) (indirection) at ./heap.go:9:13
-    ./heap.go:9:13:         from ... argument (passed to call[argument content escapes]) at ./heap.go:9:13
-    ./heap.go:9:13: main ... argument does not escape
-    GOPHERCON-2018
-    ➜  examples git:(master) ✗
-
-
-* What happened?
-
-So looking at *Line*13*
-
-- x is passed to `fmt.Println` which receives an *interface* argument
-- so x is converted to an interface whose value 'x' is alloc on the heap.
-- So x `escapes`
-
-This is very confusing/counterintuitive to a C/C++ developer, yet this is how Go works.
-
+# * Where will x be allocated?
+# 
+# *Heap* or *Stack*?
+# 
+# * Let's find out...
+# 
+#     ➜  examples git:(master) ✗ go run -gcflags -m heap.go
+#     # command-line-arguments
+#     ./heap.go:9:13: x escapes to heap <---- Something strange happens
+#     ./heap.go:9:13: main ... argument does not escape
+#     GOPHERCON-2018
+# 
+# It's surprising to see *x* which not called outside may is allocated on the heap instead.
+# 
+# * Why?
+# 
+# I’ll pass the -m option multiple times to make the output more verbose:
+# 
+#     # command-line-arguments
+#     ./heap.go:7:6: cannot inline main: non-leaf function
+#     ./heap.go:9:13: x escapes to heap
+#     ./heap.go:9:13:         from ... argument (arg to ...) at ./heap.go:9:13
+#     ./heap.go:9:13:         from *(... argument) (indirection) at ./heap.go:9:13
+#     ./heap.go:9:13:         from ... argument (passed to call[argument content escapes]) at ./heap.go:9:13
+#     ./heap.go:9:13: main ... argument does not escape
+#     GOPHERCON-2018
+#     ➜  examples git:(master) ✗
+# 
+# 
+# * What happened?
+# 
+# So looking at *Line*13*
+# 
+# - x is passed to `fmt.Println` which receives an *interface* argument
+# - so x is converted to an interface whose value 'x' is alloc on the heap.
+# - So x `escapes`
+# 
+# This is very confusing/counterintuitive to a C/C++ developer, yet this is how Go works.
+# 
 
 * Lessons
 
 - Escape analysis is very important in writing more performant Go programs, yet there's no language specification on this.
 - Some of the compiler's escape analysis decisions are counterintuitive, yet trial and error is the only way to know
 - Do not make assumptions, rather do *escape*analysis* on the code and make informed decisions.
-
-
-* Escape Analysis guidelines
-
-- Functions calling other functions
-- references assigned to struct members
-- slices and maps
-- pointers to variables
 
 * Conclusion
 
@@ -169,7 +161,7 @@ This is very confusing/counterintuitive to a C/C++ developer, yet this is how Go
 
 - Memory leaks are common in any language including garbage collected languages
 
-- It can be caused by: assigned but unused memory, dangling pointers, synchronization issues.
+- It can be caused by: assigned but unused memory, synchronization issues.
 
 - Some of these errors can be hard to detect, but Go has a set of tools which could be very effective in debugging these bugs
 
@@ -193,11 +185,12 @@ This snippet is guaranteed to work even if cases where there’s a panic and it�
 In very large files where resources cannot be tracked and freed properly, this becomes a problem.
 
 Consider a file monitoring program in *C* where:
+
 - We check a specific directory for db file dumps
 - perform some operation(logging, file versioning, etc)
 
 * Something like this might work
-.play 02-do-not-defer-in-infinite-loop/examples/file.c /START OMIT/,/END OMIT/
+.code 02-do-not-defer-in-infinite-loop/examples/file.c /START OMIT/,/END OMIT/
 This will be sure to open and close up the files once the operations are done.
 
 * However in Go
@@ -211,7 +204,7 @@ This will be sure to open and close up the files once the operations are done.
 
 * How do I fix this?
 
-- Spin up a goroutine for each file monitoring
+- Creating a function literal for each file monitoring process
 - This ensures everything is bound to the context
 - Hence files are opened and closed
 
@@ -222,7 +215,7 @@ This will be sure to open and close up the files once the operations are done.
 * Lessons learned
 
 - Since defer is tied to the new function context, we are sure it's executed and memory is flushed when files close
-- When defer executes we are certain our goroutine finished execution, so no memory leaks
+- When defer executes we are certain our function literal finished execution, so no memory leaks
 
 * Conclusion
 
@@ -258,20 +251,13 @@ Prior to Go 1.2 there was a memory safety issue with slices
 
 - This could lead to unintended memory writes.
 
-- Cause *robustness* issues where these regions of memory are not garbage collected.
+- Cause *robustness* issues
+
+- These regions of memory are not garbage collected.
 
 
 * Let's use an example.
 .play 03-pointer-in-non-visible-slice-portion/examples/main.go /START OMIT/,/END OMIT/
-
-
-* Our output will be:
-
-    ➜  examples git:(master) ✗ go run main.go
-    [0xc420016090 0xc420016098]
-    [0xc420016090]
-    [0xc420016090 0xc420016098]
-
 
 * What are some of the problems?
 
@@ -319,7 +305,9 @@ Our slice cap was set to 1, we can't access regions of memory we don't have perm
 
 - Our slice capacity was set to 1, so can't access restricted regions in memory, rightly creating a panic
 
-- More robust programs since unused memory is garbae collected.
+- More robust programs
+
+- Fewer memory leaks since unused memory is garbage collected.
 
 - Reduce sources for potential bugs in your code.
 
@@ -356,6 +344,7 @@ Let's take a look at an example
 
 - Concurrency in Go materializes itself in the form of goroutines and channels.
 
+
 *Problem:*
 
 - We'll look at the issue
@@ -364,41 +353,6 @@ Let's take a look at an example
 
 * main.go
 .play 04-error-handling-with-channels/examples/main.go /START OMIT/,/END OMIT/
-
-* What does our code do?
-
-This program spins up two goroutines and runs some internal processes and writes the results to a channel
-
-Our output here is:
-
-    ➜  examples git:(master) ✗ go run main.go
-    2018/08/28 14:09:54 profile: trace enabled, /var/folders/s7/s4fj1d3j07b5wqy3jw_lpwj00000gn/T/profile307450157/trace.out
-    something went wrong with b
-    done wth a
-    done wth a
-    something went wrong with a
-    done with b
-    done with b
-    something went wrong with b
-    done wth a
-    done wth a
-    something went wrong with a
-    done with b
-    done with b
-
-
-* Let's look at the memory build up
-
-    Processes: 481 total, 2 running, 479 sleeping, 3067 threads                                                                                                                    14:22:36
-    Load Avg: 2.10, 2.16, 2.20  CPU usage: 2.95% user, 2.36% sys, 94.67% idle  SharedLibs: 157M resident, 40M data, 5464K linkedit.
-    MemRegions: 179430 total, 5220M resident, 119M private, 2881M shared. PhysMem: 16G used (3359M wired), 150M unused.
-    VM: 7554G vsize, 1111M framework vsize, 3678046(0) swapins, 4327421(0) swapouts. Networks: packets: 14686827/9918M in, 4519629/711M out. Disks: 2386524/45G read, 2410064/54G written.
-
-    PID    COMMAND      %CPU      TIME     #TH    #WQ   #PORT MEM    PURG   CMPRS  PGRP  PPID  STATE    BOOSTS           %CPU_ME %CPU_OTHRS UID  FAULTS    COW     MSGSENT    MSGRECV
-    39491  main         0.6       00:00.30 10     0     32    1404K+ 0B     0B     39477 39477 sleeping *0[1]            0.00000 0.00000    501  667+      11      22         11
-    39477  go           0.0       00:00.22 16     0     57    9212K  0B     0B     39477 8036  sleeping *0[1]            0.00000 0.00000    501  6854      1531    55         27
-    39465  quicklookd   0.0       00:00.14 4      1     85    5060K  32K    0B     39465 1     sleeping  0[0]            0.00000 0.00000    501  4657      258     288        79
-
 
 * What are the problems with the code
 - More goroutines than channels are present to write to send data back to main
@@ -412,41 +366,6 @@ This makes it possible for the two goroutines to pass their results to the calli
 
 .play 04-error-handling-with-channels/examples/fixed.go /START OMIT/,/END OMIT/
 
-* Our output here becomes
-
-    ➜  examples git:(master) ✗ go run fixed.go
-    2018/08/29 00:40:45 profile: trace enabled, /var/folders/s7/s4fj1d3j07b5wqy3jw_lpwj00000gn/T/profile855307187/trace.out
-    ------
-    done wth a
-    something went wrong with a
-    done with b
-    ------
-    done wth a
-    something went wrong with a
-    done with b
-    ------
-    done with b
-    something went wrong with b
-    done wth a
-    ------
-    done wth a
-    something went wrong with a
-    done with b
-    ------
-
-
-* Our memory build up is:
-
-    Processes: 480 total, 2 running, 478 sleeping, 3066 threads                                                                                                                    14:31:45
-    Load Avg: 1.79, 2.17, 2.19  CPU usage: 2.70% user, 3.41% sys, 93.87% idle  SharedLibs: 159M resident, 40M data, 5556K linkedit.
-    MemRegions: 211071 total, 5727M resident, 103M private, 2878M shared. PhysMem: 16G used (3397M wired), 403M unused.
-    VM: 7551G vsize, 1112M framework vsize, 3678685(0) swapins, 4327421(0) swapouts. Networks: packets: 14689235/9919M in, 4522309/711M out. Disks: 2395186/45G read, 2417927/54G written.
-
-    PID    COMMAND      %CPU TIME     #TH   #WQ  #PORT MEM    PURG   CMPRS  PGRP  PPID  STATE    BOOSTS          %CPU_ME %CPU_OTHRS UID  FAULTS    COW     MSGSENT    MSGRECV    SYSBSD
-    39844  top          4.8  00:02.74 1/1   0    23    5880K  0B     0B     39844 15534 running  *0[1]           0.00000 0.00000    0    18318+    110     928405+    464178+    66200+
-    39835  main         0.6  00:00.30 11    0    35    1396K+ 0B     0B     39821 39821 sleeping *0[1]           0.00000 0.00000    501  667+      11      24         12         5386+
-    39821  go           0.0  00:00.18 15    0    54    9272K  0B     0B     39821 8036  sleeping *0[1]           0.00000 0.00000    501  7075      1500    53         26         12111
-    39813  quicklookd   0.0  00:00.08 4     1    85    5020K  32K    0B     39813 1     sleeping  0[0]           0.00000 0.00000    501  4617      258     288        79         2292
 
 * Performing Traces on the code
 
@@ -468,6 +387,7 @@ However there are some best practices you can follow to avoid some of these erro
 
 - Take advantage of the go tooling ecosystem: go tool trace, go tool profile , go-torch, gops, leaktest etc
 
+- Worth checking the *errgroup* package for this pattern
 
 * Error handling
 
@@ -481,7 +401,7 @@ Also these error type is based on an error *interface.
         Error() string
     }
 
-The error variable is a string variable.
+The `Error` method in `error` returns a *string*
 
 A closer look at the *errors*package* will provide some good insides into handling errors in Go.
 
@@ -494,12 +414,12 @@ Consider a *C* program with a division by zero error
 
 - Typically consists of writing error message to stderr and returning an exit code.
 
-However, in Go errors are much more complicated than strings.
+However, in Go errors are much more sophisticated than strings.
 
 Consider this example:
 .play 05-errors-are-not-strings/examples/main.go /START OMIT/,/END OMIT/
 
-* Wrapping Errors in Go(Errors package)
+* Wrapping Errors in Go with github.com/pkg/errors
 Consider another example
 
 .play 05-errors-are-not-strings/examples/errors.go /START OMIT/,/END OMIT/

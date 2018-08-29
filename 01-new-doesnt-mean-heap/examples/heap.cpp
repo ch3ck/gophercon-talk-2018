@@ -2,6 +2,7 @@
 
 // START OMIT
 int foo() {
+    // This is a memory leak below
     int *a = new(int);  // HL
     return *a;
 }
