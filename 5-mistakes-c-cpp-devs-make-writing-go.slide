@@ -23,7 +23,7 @@ https://github.com/Ch3ck
 
 - Avoid some common pitfalls newbies face writing Go
 
-Follow the slides here: https://bit.ly/5-go-mistakes
+Follow the slides here: *https://bit.ly/5-go-mistakes*
 
 
 * Agenda
@@ -51,11 +51,10 @@ A *Stack* is a special region in created to store *temporary* variables *bound* 
 It's self cleaning and expands and shrinks accordingly.
 
 
-
 A *Heap* is a bigger region in memory in addition to the stack used for storing values, 
 It's more costly to maintain since the GC needs to clean the region from time to time adding extra latency.
 
-
+.image stack-heap.jpg 300 400
 
 * Mistake 1: New doesn't mean heap && var doesn't mean stack
 
