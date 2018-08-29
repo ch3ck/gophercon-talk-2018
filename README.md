@@ -46,8 +46,8 @@ $ git clone https://github.com/Ch3ck/5-mistakes-c-cpp-devs-make-writing-go
  ```
  cd 5-mistakes-c-cpp-devs-make-writing-go && present
  ```
-$ git clone https://github.com/Ch3ck/5-mistakes-c-cpp-devs-make-writing-go
-The slides will be available at [http://127.0.0.1:3999/5-mistakes-c-cpp-devs-make-writing-goslide](http://127.0.0.1:3999/5-mistakes-c-cpp-devs-make-writing-go.slide#1)
+
+The slides will be available at [http://127.0.0.1:3999/](http://127.0.0.1:3999/5-mistakes-c-cpp-devs-make-writing-go.slide#1)
 
 
 
