@@ -473,7 +473,17 @@ However there are some best practices you can follow to avoid some of these erro
 
 * What are errors in Go?
 
+Go has a built-in *error* type which uses error values to indicate an abnormal state.
 
+Also these error type is based on an error *interface.
+
+    type error interface {
+        Error() string
+    }
+
+The error variable is a string variable.
+
+A closer look at the *errors*package* will provide some good insides into handling errors in Go.
 
 * Mistake 5: Errors are not just strings, but much more
 
@@ -508,17 +518,10 @@ I believe it’s a feature some developers my overlook but if used properly will
 
 Take a look at the errors package and see elegant examples.
 
-
-* Discussion
-
-
-Any questions?
-
-
 * Conclusion
 
 
-- *Understand* Escape analysis by looking at the compiler decisions, do not make *reasonable guesses*.
+- *Understand* Escape analysis by looking at the compiler decisions, do not make *reasonable*guesses*.
 
 
 - *Defer* executes only when the function returns. Using it in a infinite loop is a *mistake*.
@@ -543,3 +546,8 @@ Just remember ...
 
 - "Programming in Go is like being young again (but more productive!)."
 .caption
+
+* Discussion
+
+
+Any questions?
