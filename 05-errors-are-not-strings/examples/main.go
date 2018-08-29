@@ -10,6 +10,7 @@ import (
 func main() {
 	conn, err := net.Dial("tcp", "goooooooooooogle.com:80")
 	if err != nil {
+		fmt.Println("%T", err)
 		switch err := err.(type) {
 		case *net.OpError:
 			fmt.Println(err)
