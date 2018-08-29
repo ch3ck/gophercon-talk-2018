@@ -23,6 +23,8 @@ https://github.com/Ch3ck
 
 - Avoid some common pitfalls newbies face writing Go
 
+Follow the slides here: https://bit.ly/5-go-mistakes
+
 
 * Agenda
 
@@ -471,3 +473,5 @@ Just remember ...
 
 
 Any questions?
+
+*Slides:* *https://bit.ly/5-go-mistakes*
