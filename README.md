@@ -1,14 +1,15 @@
-# 5 Mistakes C/CPP Devs make writing Go
-My Gophercon 2018 Talk
+# Mistakes C/C++ Devs make writing Go
+
+My Gophercon 2018 Talk code and Demo
 
 ## Topics
 
 This talk brings my experiences coming from a predominantly C/C++ background and moving to Go. Talking about certain biases I had earlier and general newbie mistakes moving to Go. I'll talk about the following concepts:
 
-### Escape Analysis
+### Heap vs Stack
 - M[0] = New doesnt' imply heap, var doesn't imply stack
 
-### Memory Leaks
+### Memory & Goroutine Leaks
 
 - M[1] = Do not defer in an infinite Loop
 
@@ -16,8 +17,6 @@ This talk brings my experiences coming from a predominantly C/C++ background and
 
 - Note: memory safety  and bytes.Split bytes.Fields
 
-
-### Goroutine Leaks
 - M[4] = Error handling with Channels where cap(errc) < # goroutines
 
 
