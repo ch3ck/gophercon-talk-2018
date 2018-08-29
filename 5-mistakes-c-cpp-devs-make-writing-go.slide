@@ -28,7 +28,7 @@ Follow the slides here: https://bit.ly/5-go-mistakes
 
 * Agenda
 
-I classified the my mistakes under 3 topics:
+I classified my mistakes under 3 topics:
 
 - Heap Vs Stack
 - Memory & Goroutine leaks
