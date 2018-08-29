@@ -16,15 +16,15 @@ func doSomething(name string) error {
 // START OMIT
 func doSomethingTwice() error {
 	// Issue occurs below
-	errc := make(chan error) // HL
+	errc := make(chan error, 2) // HL
 
 	go func() {
 		defer fmt.Println("done wth a")
-		errc <- doSomething("a") // HL
+		errc <- doSomething("a")
 	}()
 	go func() {
 		defer fmt.Println("done with b")
-		errc <- doSomething("b") // HL
+		errc <- doSomething("b")
 	}()
 	err := <-errc // HL
 	return err
