@@ -26,27 +26,38 @@ https://github.com/Ch3ck
 
 * Agenda
 
-I classified the 5 mistakes under 4 topics:
+I classified the my mistakes under 3 topics:
 
-- Escape Analysis
-- Memory leaks
-- Goroutine leaks
+- Heap Vs Stack
+- Memory & Goroutine leaks
 - Error handling
-
-I'll be open to questions at the end of the presention
 
 
 * One more thing ...
 
 This is a discussion
 
-If you don't understand something, or think what I'm saying is incorrect, please ask.
+If you don't understand something, or think what I'm saying is incorrect, please ask at the end.
 
-* Escape Analysis
+I'll leave some minutes at the end of the presentation for some Q/A
+
+* Heap Vs Stack
+
+* What is a Heap and Stack in Go?
+
+A *Stack* is a special region in created to store *temporary* variables *bound* to a function. 
+It's self cleaning and expands and shrinks accordingly.
+
+
+
+A *Heap* is a bigger region in memory in addition to the stack used for storing values, 
+It's more costly to maintain since the GC needs to clean the region from time to time adding extra latency.
+
+
 
 * Mistake 1: New doesn't mean heap && var doesn't mean stack
 
-An early mistake was to minimize _escape_analysis_ and it's possible implications my program's performances
+An early mistake was to minimize *escape*analysis* and it's possible implications on my program's perf.
 
 
 Consider the following _C++_ code
@@ -54,9 +65,10 @@ Consider the following _C++_ code
 
 * Wrong assumptions..
 
-- In C++, we know *new* allocates to the value stored at *a* on the heap.
+- In C++, we know *new(int)* is allocated on the heap.
 
-- In Go, we don't really know for sure. 
+- In Go, we don't really know for sure.
+
 - May be the *new* keyword was stolen from C++ as a result might likely be allocated on the heap?
 
 - Given my C++ bias, I thought minimizing it's use will reduce _heap_ allocation.
@@ -64,48 +76,41 @@ Consider the following _C++_ code
 
 * Let's look at some code...
 
-.code 01-new-doesnt-mean-heap/examples/heap.go /START OMIT/,/END OMIT/
+.play 01-new-doesnt-mean-heap/examples/stack.go
 
 * Question
 
-Where do we think the *vv* variable will be allocated? *stack* or *heap*?
+Where do we think the *vv* variable will be allocated? 
+
+*Stack* or *Heap*?
 
 * Let's look at the compiler escape decisions output
 
-    $ go run -gcflags -m main.go
+    ➜  examples git:(master) ✗ go run -gcflags -m stack.go
     # command-line-arguments
-    ./main.go:6:6: can inline newIntStack
-    ./main.go:12:39: inlining call to newIntStack
-    ./main.go:7:11: new(int) escapes to heap
-    ./main.go:12:27: *(*int)(~r0) escapes to heap
-    ./main.go:12:39: main new(int) does not escape         <--- Surprise!!!
-    ./main.go:12:26: main ... argument does not escape
+    ./stack.go:7:6: can inline newIntStack
+    ./stack.go:14:39: inlining call to newIntStack
+    ./stack.go:9:11: new(int) escapes to hea
+    ./stack.go:14:27: *(*int)(~r0) escapes to heap
+    ./stack.go:14:39: main new(int) does not escape <-- STACK ALLOCATED
+    ./stack.go:14:26: main ... argument does not escape
     0
+    ➜  examples git:(master) 
 
 * Let's take a look at another example
-
-    package main
-
-    import "fmt"
-
-    func main() {
-        x := "GOPHERCON-2018"
-        fmt.Println(x)
-    }
+.play 01-new-doesnt-mean-heap/examples/heap.go
 
 * Where will x be allocated?
 
-Stack or Heap?
+*Heap* or *Stack*?
 
 * Let's find out...
 
-    ➜  examples git:(master) ✗ go run -gcflags -m main.go
+    ➜  examples git:(master) ✗ go run -gcflags -m heap.go
     # command-line-arguments
-    ./main.go:15:13: x escapes to heap        <---- STRANGE THINGS!
-    ./main.go:15:13: main ... argument does not escape
+    ./heap.go:9:13: x escapes to heap <---- Something strange happens
+    ./heap.go:9:13: main ... argument does not escape
     GOPHERCON-2018
-    ➜  examples git:(master) ✗
-
 
 It's surprising to see *x* which not called outside may is allocated on the heap instead.
 
@@ -113,24 +118,24 @@ It's surprising to see *x* which not called outside may is allocated on the heap
 
 I’ll pass the -m option multiple times to make the output more verbose:
 
-    ➜  examples git:(master) ✗ go run -gcflags '-m -m'  main.go
     # command-line-arguments
-    ./main.go:13:6: cannot inline main: non-leaf function
-    ./main.go:15:13: x escapes to heap
-    ./main.go:15:13:        from ... argument (arg to ...) at ./main.go:15:13
-    ./main.go:15:13:        from *(... argument) (indirection) at ./main.go:15:13
-    ./main.go:15:13:        from ... argument (passed to call[argument content escapes]) at ./main.go:15:13
-    ...                                          // <-- X is called by a funtion above which escapes! -->
-    ./main.go:15:13: main ... argument does not escape
+    ./heap.go:7:6: cannot inline main: non-leaf function
+    ./heap.go:9:13: x escapes to heap
+    ./heap.go:9:13:         from ... argument (arg to ...) at ./heap.go:9:13
+    ./heap.go:9:13:         from *(... argument) (indirection) at ./heap.go:9:13
+    ./heap.go:9:13:         from ... argument (passed to call[argument content escapes]) at ./heap.go:9:13
+    ./heap.go:9:13: main ... argument does not escape
     GOPHERCON-2018
     ➜  examples git:(master) ✗
 
+
 * What happened?
 
-So looking at L15:13
+So looking at *Line*13*
 
-- x is passed to a function argument which `escapes`
-- So x is heap allocated instead.
+- x is passed to `fmt.Println` which receives an *interface* argument
+- so x is converted to an interface whose value 'x' is alloc on the heap.
+- So x `escapes`
 
 This is very confusing/counterintuitive to a C/C++ developer, yet this is how Go works.
 
@@ -139,7 +144,7 @@ This is very confusing/counterintuitive to a C/C++ developer, yet this is how Go
 
 - Escape analysis is very important in writing more performant Go programs, yet there's no language specification on this.
 - Some of the compiler's escape analysis decisions are counterintuitive, yet trial and error is the only way to know
-- Do not make assumptions, rather do static analysis on the code and make informed decisions.
+- Do not make assumptions, rather do *escape*analysis* on the code and make informed decisions.
 
 
 * Escape Analysis guidelines
@@ -150,10 +155,24 @@ This is very confusing/counterintuitive to a C/C++ developer, yet this is how Go
 - pointers to variables
 
 * Conclusion
-"If a reference to a variable is returned from a function where it’s declared, it ‘escapes’ and is heap allocated instead"
+
+"Understand heap vs stack allocation in your Go program by checking the compiler's escape analysis report and making informed decisions, do not guess"
 .caption
 
 * Memory Leaks
+
+* How does memory leak in Go
+
+- I assumed since there's a garbage collector, then everything is fine
+
+*Not*True!*
+
+- Memory leaks are common in any language including garbage collected languages
+
+- It can be caused by: assigned but unused memory, dangling pointers, synchronization issues.
+
+- Some of these errors can be hard to detect, but Go has a set of tools which could be very effective in debugging these bugs
+
 
 * Mistake 2: Do not defer in an infinite Loop
 
@@ -174,15 +193,15 @@ This snippet is guaranteed to work even if cases where there’s a panic and it�
 In very large files where resources cannot be tracked and freed properly, this becomes a problem.
 
 Consider a file monitoring program in *C* where:
-- check a database for changes to files
-- perform some operation(logging, send requests etc)
+- We check a specific directory for db file dumps
+- perform some operation(logging, file versioning, etc)
 
 * Something like this might work
-.code 02-do-not-defer-in-infinite-loop/examples/file.c /START OMIT/,/END OMIT/
+.play 02-do-not-defer-in-infinite-loop/examples/file.c /START OMIT/,/END OMIT/
 This will be sure to open and close up the files once the operations are done.
 
 * However in Go
-.code 02-do-not-defer-in-infinite-loop/examples/main.go /START OMIT/,/END OMIT/
+.play 02-do-not-defer-in-infinite-loop/examples/error.go /START OMIT/,/END OMIT/
 
 *Problems:*
 - Deferred code never executes since the function has not returned
@@ -198,38 +217,55 @@ This will be sure to open and close up the files once the operations are done.
 
 * Solution
 
-.code 02-do-not-defer-in-infinite-loop/examples/main.go /START FIX/,/END FIX/
+.play 02-do-not-defer-in-infinite-loop/examples/main.go /START OMIT/,/END OMIT/
 
 * Lessons learned
 
 - Since defer is tied to the new function context, we are sure it's executed and memory is flushed when files close
-- When defer executes we are certain our goroutine finished execution
-- Defer doesn not execute until the function returns, so no memory leaks result
+- When defer executes we are certain our goroutine finished execution, so no memory leaks
 
 * Conclusion
 
-"A *defer* statement invokes a function whose execution is deferred to the moment the surrounding function returns"
+"Do not defer in an infinite loop, since the defer statement invokes the function execution *ONLY* when the surrounding function returns"
 .caption
 
 
-* Mistake 3: Keeping pointers in an accessible(although not visible) part of a slice
 
-- Prior to Go 1.2 there was a memory safety issue with slices, where you could literally access regions in memory you're not legally permitted to:
-- This would create problems where you'll unitentionally rewrite regions of memory and will increase your pain.
+
+* Pointers to accessible parts of a slice
+
+* What's a slice?
+
+A *slice* is a dynamically sized flexible view into an array.
+
+We know arrays have fixed fizes.
+
+There are *two* main *features* of slices to think about:
+
+- The *length* of a slice is simply the total number of elements contained in the slice
+- The *capacity* of a slice is the number of elements in the underlying array.
+
+Their understanding can avoid some robustness issues.
+
+* How?
+
+
+* Mistake 3: Keeping pointers to an accessible(although not visible) part of a slice
+
+Prior to Go 1.2 there was a memory safety issue with slices
+
+- access to elements of the underlying array.
+
+- This could lead to unintended memory writes.
+
+- Cause *robustness* issues where these regions of memory are not garbage collected.
+
 
 * Let's use an example.
-Consider the slice:
-
-	a := []*int{new(int), new(int)}
-	a = a[:1]
-	fmt.Println(a) // [&0]
-
-	// second element is not garbage collected, because it's *still* accessible
-	a = a[:2] //[&0] // <-- Illegal memory access
-	fmt.Println(a)
+.play 03-pointer-in-non-visible-slice-portion/examples/main.go /START OMIT/,/END OMIT/
 
 
-Our output will be:
+* Our output will be:
 
     ➜  examples git:(master) ✗ go run main.go
     [0xc420016090 0xc420016098]
@@ -276,7 +312,7 @@ Rewriting our code gives
         /Users/nyahcheck/go/src/github.com/Ch3ck/5-mistakes-c-cpp-devs-make-writing-go/03-pointer-in-non-visible-slice-portion/examples/main.go:27 +0x1ae
     exit status 2
 
-Our slice cap was set to 1, we can't access regions of memoery we don't have permissions to, rightly creating a panic.
+Our slice cap was set to 1, we can't access regions of memory we don't have permissions to, rightly creating a panic.
 
 * Lesson
 
@@ -461,7 +497,7 @@ Any questions?
 - *Understand* Escape analysis by looking at the compiler decisions, do not make *reasonable guesses*.
 
 
-- *Defer* executes only when the function returns. Using it in a infinite loop is a *code smell*.
+- *Defer* executes only when the function returns. Using it in a infinite loop is a *code*smell*.
 
 
 - Three Index_slices adds a memory *safety* utility in Go, use it.

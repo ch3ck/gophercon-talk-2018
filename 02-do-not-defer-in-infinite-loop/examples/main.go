@@ -1,18 +1,30 @@
 package main
 
 import (
-	"os"
+	"log"
 	"time"
+
+	"github.com/pkg/profile"
 )
 
 //START OMIT
-func loggingMonitorErr(files []string) {
-	for range time.Tick(time.Minute) {
-		for range files {
+type file string
+
+func OpenFile(s string) file {
+	log.Printf("opening %s", s) // HL
+	return file(s)
+}
+func (f file) Close() { log.Printf("closing %s", f) } // HL
+
+func loggingMonitorFix(files ...string) {
+	for range time.Tick(time.Second) {
+		for _, f := range files {
 			//files coming in through the channel.
-			fp := os.Open("files")
-			defer fp.Close() //<-- Does not execute -->
-			//process file
+			func() { // HL
+				fp := OpenFile(f) // HL
+				defer fp.Close()  // HL
+				//process file
+			}() // HL
 		}
 	}
 }
@@ -20,25 +32,7 @@ func loggingMonitorErr(files []string) {
 //END OMIT
 
 func main() {
-	fp, err := os.Open("path/to/file.text")
-	if err != nil {
-		//handle error gracefully
-	}
-	defer fp.Close()
-}
+	defer profile.Start(profile.TraceProfile).Stop() //ADD TRACING TOOL
 
-//START FIX
-func loggingMonitorFix(files []string) {
-	for range time.Tick(time.Minute) {
-		for range files {
-			//files coming in through the channel.
-			func() {
-				fp := os.Open("files")
-				defer fp.Close() //<-- Executes since defer is bound to func context -->
-				//process file
-			}()
-		}
-	}
+	loggingMonitorFix("one.txt", "two.txt")
 }
-
-//END FIX

@@ -16,7 +16,7 @@ func doSomething(name string) error {
 
 func doSomethingTwice() error {
 	// without the 2  goroutines this will leak a goroutine
-	errc := make(chan error, 1) // ISSUE OCCURS HERE
+	errc := make(chan error) // ISSUE OCCURS HERE
 	//errc := make(chan error, 2) // FIX TO ISSUE
 	go func() {
 		defer fmt.Println("done wth a")
@@ -35,7 +35,8 @@ func main() {
 	defer profile.Start(profile.TraceProfile).Stop() //ADD TRACING TOOL
 
 	rand.Seed(time.Now().Unix())
-	for range time.Tick(100 * time.Millisecond) {
+	for range time.Tick(1000 * time.Millisecond) {
+		fmt.Println("------")
 		fmt.Println(doSomethingTwice())
 	}
 

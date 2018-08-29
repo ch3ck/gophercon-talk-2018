@@ -2,8 +2,8 @@
 
 // START OMIT
 int foo() {
-	int *a = new(int);
-        return *a;
+    int *a = new(int);  // HL
+    return *a;
 }
 // END OMIT
 
